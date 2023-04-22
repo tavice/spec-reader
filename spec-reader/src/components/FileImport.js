@@ -24,29 +24,32 @@ const FileImport = () => {
   const pdfjs = require("pdfjs-dist/build/pdf");
 
   const parsePdf = async (pdfData) => {
-    pdfjs.GlobalWorkerOptions.workerSrc =
-      "//cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js";
+    pdfjs.GlobalWorkerOptions.workerSrc = '//cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
     const pdf = await pdfjs.getDocument({ data: pdfData }).promise;
     const pages = [];
     for (let i = 1; i <= pdf.numPages; i++) {
       const page = await pdf.getPage(i);
       const textContent = await page.getTextContent();
       const textItems = textContent.items.map((item) => item.str);
-      const pageText = textItems.join(" ");
+      const pageText = textItems.join(' ');
       pages.push(pageText);
       if (pages.length === pdf.numPages) {
-        const text = pages.join(" ");
+        const text = pages.join(' ');
+        console.log(text);
         const jsonData = { text };
-       // downloadJson(jsonData);
-        //downloadText(text);
-        saveToLocalStorage(text);
+        const response = await fetch('http://localhost:3001/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ text })
+        });
+        const data = await response.json();
+        console.log(data);
       }
     }
-
-    console.log(pages);
-    console.log(pdf);
   };
-
+  
   //Function to download json as a JSON File
   const downloadJson = (data) => {
     const json = JSON.stringify(data);
