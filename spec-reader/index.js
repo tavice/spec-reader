@@ -33,6 +33,20 @@ const openai = new OpenAIApi(configuration);
 app.use(bodyParser.json());
 app.use(cors());
 
+//==cors headers==//
+app.use(function(req, res, next) {
+    console.log('Setting Access-Control-Allow-Origin header');
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE, OPTIONS');
+    next();
+  });
+  
+
+
+//==routes==//
+
+//==POST==//
 app.post('/', async (req, res) => {
     const { text } = req.body;
     const response = await openai.createCompletion({
@@ -50,7 +64,9 @@ app.post('/', async (req, res) => {
       if (response.data.choices) {
         res.json({
           keywords: response.data.choices[0].text
+         
         });
+
       }
     }
   });

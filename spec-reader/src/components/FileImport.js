@@ -2,7 +2,7 @@ import React from "react";
 import { saveAs } from "file-saver";
 import pdfjsLib from "pdfjs-dist";
 
-const FileImport = () => {
+const FileImport = ({ keywords }) => {
   //Function to handle file change
   const handleFileChange = (event) => {
     const file = event.target.files[0];
@@ -46,6 +46,8 @@ const FileImport = () => {
         });
         const data = await response.json();
         console.log(data);
+        keywords.push(data.keywords);
+        console.log(keywords);
       }
     }
   };
@@ -68,7 +70,7 @@ const FileImport = () => {
     // console.log(url);
   };
 
-  //Function to download json as a JSON File
+  //Function to download json as a text File
     const downloadText = (data) => {
         const blob = new Blob([data], { type: "text/plain;charset=utf-8" });
         saveAs(blob, "data.txt");
@@ -85,8 +87,9 @@ const FileImport = () => {
 
   return (
     <div>
-      <input type="file" onChange={handleFileChange} />
-    </div>
+    <input type="file" onChange={handleFileChange} />
+    <textarea value={keywords} readOnly />
+  </div>
   );
 };
 
