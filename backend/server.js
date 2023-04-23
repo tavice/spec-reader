@@ -53,7 +53,7 @@ app.post("/", async (req, res) => {
   const { text } = req.body;
   const response = await openai.createCompletion({
     model: "text-davinci-003",
-    prompt: "extract keywords from text: " + text + "\n\nKeywords:\n",
+    prompt: "extract keywords from text: " + text + "\n\nKeywords:\n" + "your keywords should be weighted by their importance, for example: \n- keyword1 (0.5)\n- keyword2 (0.3)\n- keyword3 (0.2)\n etc... then you will return a json object with the keywords and their weights.",
     max_tokens: 200,
     temperature: 0,
     top_p: 1.0,
