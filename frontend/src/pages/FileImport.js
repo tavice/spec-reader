@@ -2,6 +2,10 @@ import React from "react";
 import { saveAs } from "file-saver";
 import pdfjsLib from "pdfjs-dist";
 
+//Import TagCLoud
+import { TagCloud } from 'react-tagcloud'
+//import 'react-tagcloud/dist/styles.min.css';
+
 const FileImport = ({ keywords }) => {
   //Function to handle file change
   const handleFileChange = (event) => {
@@ -89,6 +93,14 @@ const FileImport = ({ keywords }) => {
     <div>
     <input type="file" onChange={handleFileChange} />
     <textarea value={keywords} readOnly />
+    <TagCloud
+  minSize={12}
+  maxSize={35}
+  tags={keywords.map((keyword, index) => ({ value: keyword, count: index + 1 }))}
+  className="simple-cloud"
+  onClick={(tag) => console.log(`'${tag.value}' was selected!`)}
+/>
+
   </div>
   );
 };
