@@ -1,9 +1,9 @@
-import React, { useState }  from "react";
+import React, { useState } from "react";
 import { saveAs } from "file-saver";
 import pdfjsLib from "pdfjs-dist";
 
 //Import TagCLoud
-import { TagCloud } from 'react-tagcloud'
+import { TagCloud } from "react-tagcloud";
 //import 'react-tagcloud/dist/styles.min.css';
 
 const FileImport = () => {
@@ -26,30 +26,30 @@ const FileImport = () => {
     console.log(file);
   };
 
-
   //Function to parse pdf
   const pdfjs = require("pdfjs-dist/build/pdf");
 
   const parsePdf = async (pdfData) => {
-    pdfjs.GlobalWorkerOptions.workerSrc = '//cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+    pdfjs.GlobalWorkerOptions.workerSrc =
+      "//cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js";
     const pdf = await pdfjs.getDocument({ data: pdfData }).promise;
     const pages = [];
     for (let i = 1; i <= pdf.numPages; i++) {
       const page = await pdf.getPage(i);
       const textContent = await page.getTextContent();
       const textItems = textContent.items.map((item) => item.str);
-      const pageText = textItems.join(' ');
+      const pageText = textItems.join(" ");
       pages.push(pageText);
       if (pages.length === pdf.numPages) {
-        const text = pages.join(' ');
+        const text = pages.join(" ");
         console.log(text);
         const jsonData = { text };
-        const response = await fetch('http://localhost:3001/', {
-          method: 'POST',
+        const response = await fetch("http://localhost:3001/", {
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json'
+            "Content-Type": "application/json",
           },
-          body: JSON.stringify({ text })
+          body: JSON.stringify({ text }),
         });
         const data = await response.json();
         console.log(data);
@@ -58,17 +58,12 @@ const FileImport = () => {
             ...prevKeywords,
             ...data.keywords.map((keyword) => ({ value: keyword })),
           ]);
-          
         }
-
-      
       }
     }
   };
-  
-//function to get the words in a cloud version
-  
 
+  //function to get the words in a cloud version
 
   //Function to download json as a JSON File
   const downloadJson = (data) => {
@@ -89,34 +84,37 @@ const FileImport = () => {
   };
 
   //Function to download json as a text File
-    const downloadText = (data) => {
-        const blob = new Blob([data], { type: "text/plain;charset=utf-8" });
-        saveAs(blob, "data.txt");
-    };
+  const downloadText = (data) => {
+    const blob = new Blob([data], { type: "text/plain;charset=utf-8" });
+    saveAs(blob, "data.txt");
+  };
 
   //Function to save in local storage
-    const saveToLocalStorage = (data) => {
-        localStorage.setItem("data", data); const json = JSON.stringify(data);
-        localStorage.setItem('myData', json);
-        const jsonData = JSON.parse(localStorage.getItem('myData'));
-        console.log(jsonData);
-    };
-  
-    console.log('keywords are', keywords);
+  const saveToLocalStorage = (data) => {
+    localStorage.setItem("data", data);
+    const json = JSON.stringify(data);
+    localStorage.setItem("myData", json);
+    const jsonData = JSON.parse(localStorage.getItem("myData"));
+    console.log(jsonData);
+  };
+
+  console.log("keywords are", keywords);
 
   return (
     <div>
-    <input type="file" onChange={handleFileChange} />
-    <textarea value={keywords} readOnly />
-    <TagCloud
-  minSize={12}
-  maxSize={35}
-  tags={keywords.map((keyword, index) => ({ value: keyword, count: index + 1 }))}
-  className="simple-cloud"
-  onClick={(tag) => console.log(`'${tag.value}' was selected!`)}
-/>
-
-  </div>
+      <input type="file" onChange={handleFileChange} />
+      <textarea value={keywords} readOnly />
+      <TagCloud
+        minSize={12}
+        maxSize={35}
+        tags={keywords.map((keyword, index) => ({
+          value: keyword,
+          count: index + 1,
+        }))}
+        className="simple-cloud"
+        onClick={(tag) => console.log(`'${tag.value}' was selected!`)}
+      />
+    </div>
   );
 };
 
