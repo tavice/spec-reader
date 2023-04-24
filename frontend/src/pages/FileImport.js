@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState }  from "react";
 import { saveAs } from "file-saver";
 import pdfjsLib from "pdfjs-dist";
 
@@ -6,7 +6,9 @@ import pdfjsLib from "pdfjs-dist";
 import { TagCloud } from 'react-tagcloud'
 //import 'react-tagcloud/dist/styles.min.css';
 
-const FileImport = ({ keywords }) => {
+const FileImport = () => {
+  const [keywords, setKeywords] = useState([]);
+
   //Function to handle file change
   const handleFileChange = (event) => {
     const file = event.target.files[0];
@@ -23,6 +25,7 @@ const FileImport = ({ keywords }) => {
 
     console.log(file);
   };
+
 
   //Function to parse pdf
   const pdfjs = require("pdfjs-dist/build/pdf");
@@ -50,12 +53,23 @@ const FileImport = ({ keywords }) => {
         });
         const data = await response.json();
         console.log(data);
-        keywords.push(data.keywords);
-        console.log(keywords);
+        if (data.keywords) {
+          setKeywords((prevKeywords) => [
+            ...prevKeywords,
+            ...data.keywords.map((keyword) => ({ value: keyword })),
+          ]);
+          
+        }
+
+      
       }
     }
   };
   
+//function to get the words in a cloud version
+  
+
+
   //Function to download json as a JSON File
   const downloadJson = (data) => {
     const json = JSON.stringify(data);
@@ -88,6 +102,7 @@ const FileImport = ({ keywords }) => {
         console.log(jsonData);
     };
   
+    console.log('keywords are', keywords);
 
   return (
     <div>

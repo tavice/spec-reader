@@ -61,15 +61,38 @@ app.post("/", async (req, res) => {
     presence_penalty: 0.0,
   });
 
-  console.log(response.data);
-  if (response.data) {
-    if (response.data.choices) {
-      res.json({
-        keywords: response.data.choices[0].text,
-      });
+  //==generate tag cloud get the keywords in a an object ormat==//
+  function generateTagCloud(response) {
+    let tagCloud = {};
+    if (response.data && response.data.choices) { // check if response is valid
+      const keywords = response.data.choices[0].text.split('\n').filter(Boolean); // remove empty strings
+      for (const keyword of keywords) {
+        const [word, weight] = keyword.split('(').map((s) => s.trim()); // split word and weight
+        tagCloud[word] = parseFloat(weight.slice(0, -1)); // remove closing bracket
+      }
     }
+    console.log(tagCloud);
+    return tagCloud;
   }
+
+  console.log(response.data);
+  const tagCloud = generateTagCloud(response);
+  res.json({ tagCloud });
 });
+  
+
+//   console.log(response.data);
+  
+//   if (response.data) {
+//     if (response.data.choices) {
+//       const tagCloud = generateTagCloud(response);
+//       res.json({
+//         keywords: response.data.choices[0].text,
+//         tagCloud: tagCloud,
+//       });
+//     }
+//   }
+// });
 
 //==PORT==//
 app.listen(port, () => {
