@@ -18,15 +18,12 @@ require("dotenv").config();
 const ORGANIZATION = process.env.ORGANIZATION;
 const API_KEY = process.env.API_KEY;
 
-
-
 //==open ai config==//
 const configuration = new Configuration({
   organization: ORGANIZATION,
   apiKey: API_KEY,
 });
 const openai = new OpenAIApi(configuration);
-
 
 app.use(bodyParser.json());
 app.use(cors());
@@ -46,14 +43,17 @@ app.use(function (req, res, next) {
   next();
 });
 
-
 //==routes==//
 //==POST for OPEN AI==//
 app.post("/", async (req, res) => {
   const { text } = req.body;
   const response = await openai.createCompletion({
     model: "text-davinci-003",
-    prompt: "extract keywords from text: " + text + "\n\nKeywords:\n" + "your keywords should be weighted by their importance, for example: \n- keyword1 (0.5)\n- keyword2 (0.3)\n- keyword3 (0.2)\n etc... then you will return a json object with the keywords and their weights.",
+    prompt:
+      "extract keywords from text: " +
+      text +
+      "\n\nKeywords:\n" +
+      "your keywords should be weighted by their importance, for example: \n- keyword1 (0.5)\n- keyword2 (0.3)\n- keyword3 (0.2)\n etc... then you will return a json object with the keywords and their weights.",
     max_tokens: 200,
     temperature: 0,
     top_p: 1.0,
@@ -61,13 +61,16 @@ app.post("/", async (req, res) => {
     presence_penalty: 0.0,
   });
 
-  //==generate tag cloud get the keywords in a an object ormat==//
+  //==generate tag cloud get the keywords in a an object format==//
   function generateTagCloud(response) {
     let tagCloud = {};
-    if (response.data && response.data.choices) { // check if response is valid
-      const keywords = response.data.choices[0].text.split('\n').filter(Boolean); // remove empty strings
+    if (response.data && response.data.choices) {
+      // check if response is valid
+      const keywords = response.data.choices[0].text
+        .split("\n")
+        .filter(Boolean); // remove empty strings
       for (const keyword of keywords) {
-        const [word, weight] = keyword.split('(').map((s) => s.trim()); // split word and weight
+        const [word, weight] = keyword.split("(").map((s) => s.trim()); // split word and weight
         tagCloud[word] = parseFloat(weight.slice(0, -1)); // remove closing bracket
       }
     }
@@ -77,22 +80,21 @@ app.post("/", async (req, res) => {
 
   console.log(response.data);
   const tagCloud = generateTagCloud(response);
-  res.json({ tagCloud });
-});
-  
 
-//   console.log(response.data);
-  
-//   if (response.data) {
-//     if (response.data.choices) {
-//       const tagCloud = generateTagCloud(response);
-//       res.json({
-//         keywords: response.data.choices[0].text,
-//         tagCloud: tagCloud,
-//       });
-//     }
-//   }
-// });
+  // generate HTML with the tag cloud
+  const tagCloudHTML = Object.entries(tagCloud)
+    .map(
+      ([word, weight]) =>
+        `<span style="font-size: ${12 + weight * 10}px">${word}</span>`
+    )
+    .join(" ");
+
+  // respond with JSON including tag cloud and HTML
+  res.json({
+    tagCloud,
+    tagCloudHTML,
+  });
+});
 
 //==PORT==//
 app.listen(port, () => {

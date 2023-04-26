@@ -9,6 +9,9 @@ import "../styles/FileImport.css";
 import { TagCloud } from "react-tagcloud";
 //import 'react-tagcloud/dist/styles.min.css';
 
+//Import Chart
+import Chart from "chart.js/auto";
+
 const FileImport = () => {
   const [keywords, setKeywords] = useState([]);
 
@@ -54,19 +57,74 @@ const FileImport = () => {
           },
           body: JSON.stringify({ text }),
         });
+
         const data = await response.json();
+        
+        //check if data is received
         console.log(data);
+
+        //update chart
+        updateChart(data.tagCloudHTML);
+
+        //update keywords
         if (data.keywords) {
           setKeywords((prevKeywords) => [
             ...prevKeywords,
             ...data.keywords.map((keyword) => ({ value: keyword })),
           ]);
         }
+
+        //update tag cloud
+        saveToLocalStorage(data.tagCloud);
+       
       }
     }
   };
 
   //function to get the words in a cloud version
+  function updateChart(tagCloud) {
+    const canvas = document.getElementById("my-canvas");
+    const ctx = canvas.getContext("2d");
+
+    const chartData = {
+      labels: Object.keys(tagCloud),
+      datasets: [
+        {
+          label: "Tag Cloud",
+          backgroundColor: "rgba(63, 191, 255, 0.5)",
+          borderColor: "rgba(63, 191, 255, 1)",
+          borderWidth: 1,
+          data: Object.values(tagCloud),
+        },
+      ],
+    };
+
+    const options = {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        yAxes: [
+          {
+            ticks: {
+              beginAtZero: true,
+              stepSize: 0.1,
+            },
+          },
+        ],
+      },
+    };
+
+    new Chart(ctx, {
+      type: "bar",
+      data: chartData,
+      options: options,
+    });
+  }
+
+  //
+  function onCloudDraw(canvas) {
+    console.log("Canvas has been rendered:", canvas);
+  }
 
   //Function to download json as a JSON File
   const downloadJson = (data) => {
@@ -104,35 +162,41 @@ const FileImport = () => {
   console.log("keywords are", keywords);
 
   return (
-<div className="file-import-container">
-    <input type="file" className="file-input" onChange={handleFileChange} />
-    <div className="tag-cloud-container">
-      <TagCloud
-        minSize={12}
-        maxSize={35}
-        tags={keywords.map((keyword, index) => ({
-          value: keyword,
-          count: index + 1,
-        }))}
-        className="simple-cloud"
-        onClick={(tag) => console.log(`'${tag.value}' was selected!`)}
-      />
+    <div className="file-import-container">
+      <input type="file" className="file-input" onChange={handleFileChange} />
+      <div className="tag-cloud-container">
+        <TagCloud
+          minSize={12}
+          maxSize={35}
+          tags={keywords.map((keyword, index) => ({
+            value: keyword,
+            count: index + 1,
+          }))}
+          className="simple-cloud"
+          onClick={(tag) => console.log(`'${tag.value}' was selected!`)}
+          onTagDraw={(tag, canvas) => {
+            canvas.fillStyle = tag.color;
+            canvas.font = `${tag.size}px sans-serif`;
+          }}
+          onCanvasDraw={onCloudDraw}
+        />
+        <canvas id="my-canvas" />
+      </div>
+      <div className="button-group">
+        <button className="download-btn" onClick={() => downloadJson(keywords)}>
+          Download JSON
+        </button>
+        <button className="download-btn" onClick={() => downloadText(keywords)}>
+          Download Text
+        </button>
+        <button
+          className="download-btn"
+          onClick={() => saveToLocalStorage(keywords)}
+        >
+          Save to Local Storage
+        </button>
+      </div>
     </div>
-    <div className="button-group">
-      <button className="download-btn" onClick={() => downloadJson(keywords)}>
-        Download JSON
-      </button>
-      <button className="download-btn" onClick={() => downloadText(keywords)}>
-        Download Text
-      </button>
-      <button
-        className="download-btn"
-        onClick={() => saveToLocalStorage(keywords)}
-      >
-        Save to Local Storage
-      </button>
-    </div>
-  </div>
   );
 };
 
