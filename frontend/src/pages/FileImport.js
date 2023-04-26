@@ -2,6 +2,9 @@ import React, { useState } from "react";
 import { saveAs } from "file-saver";
 import pdfjsLib from "pdfjs-dist";
 
+//import css
+import "../styles/FileImport.css";
+
 //Import TagCLoud
 import { TagCloud } from "react-tagcloud";
 //import 'react-tagcloud/dist/styles.min.css';
@@ -101,9 +104,9 @@ const FileImport = () => {
   console.log("keywords are", keywords);
 
   return (
-    <div>
-      <input type="file" onChange={handleFileChange} />
-      <textarea value={keywords} readOnly />
+<div className="file-import-container">
+    <input type="file" className="file-input" onChange={handleFileChange} />
+    <div className="tag-cloud-container">
       <TagCloud
         minSize={12}
         maxSize={35}
@@ -115,6 +118,21 @@ const FileImport = () => {
         onClick={(tag) => console.log(`'${tag.value}' was selected!`)}
       />
     </div>
+    <div className="button-group">
+      <button className="download-btn" onClick={() => downloadJson(keywords)}>
+        Download JSON
+      </button>
+      <button className="download-btn" onClick={() => downloadText(keywords)}>
+        Download Text
+      </button>
+      <button
+        className="download-btn"
+        onClick={() => saveToLocalStorage(keywords)}
+      >
+        Save to Local Storage
+      </button>
+    </div>
+  </div>
   );
 };
 
