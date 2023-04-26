@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { saveAs } from "file-saver";
 import pdfjsLib from "pdfjs-dist";
 
@@ -59,7 +59,7 @@ const FileImport = () => {
         });
 
         const data = await response.json();
-        
+
         //check if data is received
         console.log(data);
 
@@ -67,21 +67,20 @@ const FileImport = () => {
         updateChart(data.tagCloudHTML);
 
         //update keywords
-        if (data.keywords) {
-          setKeywords((prevKeywords) => [
-            ...prevKeywords,
-            ...data.keywords.map((keyword) => ({ value: keyword })),
-          ]);
-        }
+        // if (data.keywords) {
+        //   setKeywords((prevKeywords) => [
+        //     ...prevKeywords,
+        //     ...data.keywords.map((keyword) => ({ value: keyword })),
+        //   ]);
+        // }
 
         //update tag cloud
         saveToLocalStorage(data.tagCloud);
-       
       }
     }
   };
 
-  //function to get the words in a cloud version
+  //function to update the chart
   function updateChart(tagCloud) {
     const canvas = document.getElementById("my-canvas");
     const ctx = canvas.getContext("2d");
@@ -152,12 +151,23 @@ const FileImport = () => {
 
   //Function to save in local storage
   const saveToLocalStorage = (data) => {
-    localStorage.setItem("data", data);
     const json = JSON.stringify(data);
     localStorage.setItem("myData", json);
     const jsonData = JSON.parse(localStorage.getItem("myData"));
     console.log(jsonData);
   };
+
+  //update keywords
+  // useEffect(() => {
+  //   // retrieve data from local storage
+  //   const jsonData = JSON.parse(localStorage.getItem("myData"));
+
+  //   // update state with the data from local storage This code checks if jsonData is truthy, and then creates a new array newKeywords by calling Object.values to get an array of the values in jsonData, and then mapping over that array to transform each value into an object with a value key. Finally, it updates the keywords state by spreading the previous state and adding the new array of keywords.
+  //   if (jsonData) {
+  //     const newKeywords = Object.values(jsonData).map((keyword) => ({ value: keyword }));
+  //     setKeywords((prevKeywords) => [...prevKeywords, ...newKeywords]);
+  //   }
+  // }, []);
 
   console.log("keywords are", keywords);
 
