@@ -100,15 +100,21 @@ app.post("/pdf", async (req, res) => {
 
 // Route for chatbot
 app.post("/", async (req, res) => {
-  const { text } = req.body;
+  const { text, originalText } = req.body;
+
+  console.log("originalText", originalText);
+  console.log("prompt from user", text);
+
   const response = await openai.createCompletion({
     model: "text-davinci-003",
     prompt:
-      "The following is a conversation with a chatbot. The bot is helpful, creative, clever, and very friendly. User: " +
-      text +
-      "Bot: The text is: " +
-      text +
-      " this will be used to analyze the text and give a response back to the user in a chatbot in the frontend",
+      "The following is a conversation with a chatbot. The bot is helpful, creative, clever, and very friendly. The first prompt will be from a text uploaded the model will analyze the next so that in the rest of the conversation it refers to the text in the originalText " +
+      "first prompt (text uploaded from a pdf): " +
+      originalText +
+      "Bot: The text from the uploaded pdf is: " +
+      originalText +
+      " this will be used to analyze the text and give a response back to the user in a chatbot in the frontend " +
+      "User: " + text + "Bot:  I understand your question is related to the text uploaded in the first prompt and this is my answer: " ,
     max_tokens: 200,
     temperature: 0,
     top_p: 1.0,
@@ -117,7 +123,6 @@ app.post("/", async (req, res) => {
   });
 
   // Send response back to frontend
-  console.log(response.data);
   if (response.data) {
     if (response.data.choices) {
       res.json({
@@ -126,6 +131,8 @@ app.post("/", async (req, res) => {
     }
   }
 });
+
+
 
 // Start server
 app.listen(port, () => {

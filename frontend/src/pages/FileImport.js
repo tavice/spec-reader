@@ -5,13 +5,14 @@ import pdfjsLib from "pdfjs-dist";
 //import css
 import "../styles/FileImport.css";
 
-
-
-
-
 const FileImport = () => {
   const [keywords, setKeywords] = useState([]);
-  const [input, setInput] = useState('');
+
+  //constant to keep uploaded text in memory after it's been uploaded:
+  const [originalText, setOriginalText] = useState("");
+
+  //constant for the chatbox
+  const [input, setInput] = useState("");
   const [messages, setMessages] = useState([]);
 
   //Function to handle file change
@@ -33,7 +34,7 @@ const FileImport = () => {
 
   //Function to parse pdf
   const pdfjs = require("pdfjs-dist/build/pdf");
-
+  
   const parsePdf = async (pdfData) => {
     pdfjs.GlobalWorkerOptions.workerSrc =
       "//cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js";
@@ -47,7 +48,12 @@ const FileImport = () => {
       pages.push(pageText);
       if (pages.length === pdf.numPages) {
         const text = pages.join(" ");
+
         console.log(text);
+        //Keep original text in memory
+
+        setOriginalText(text);
+       
         const jsonData = { text };
         const response = await fetch("http://localhost:3001/PDF", {
           method: "POST",
@@ -62,13 +68,17 @@ const FileImport = () => {
         //check if data is received
         console.log(data);
 
+        //initiate the chatbox
+
+        setMessages([...messages, { sender: "chatbot", text: data.message }]);
+        console.log(messages);
+
         //saveToLocalStorage(data);
         //downloadJson(data);
         //downloadText(data);
       }
     }
   };
-
 
   //Function to download json as a JSON File
   const downloadJson = (data) => {
@@ -102,16 +112,12 @@ const FileImport = () => {
     console.log(jsonData);
   };
 
-
-
-
   //The next function we will build the chat message
   //
 
   const handleInput = (e) => {
     setInput(e.target.value);
   };
- 
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -122,40 +128,37 @@ const FileImport = () => {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ text: input }),
+      body: JSON.stringify({ text: input, referenceText: originalText }),
     });
 
     // get response from backend API and add it to messages
     const data = await response.json();
     setMessages([...messages, { sender: "user", text: input }]); // add user message
     setMessages([...messages, { sender: "chatbot", text: data.message }]); // add chatbot message
-
+    console.log(messages);
     // clear input field
     setInput("");
   };
 
   //console.log(messages);
 
-
-
   return (
     <div className="file-import-container">
       <input type="file" className="file-input" onChange={handleFileChange} />
-      
+
       <div>
-      {messages.map((message, i) => (
-        <div key={i}>
-          <span>{message.sender}: </span>
-          <span>{message.text}</span>
-        </div>
-      ))}
-      <form onSubmit={handleSubmit}>
-        <input value={input} onChange={handleInput} />
-        <button type="submit">Send</button>
-      </form>
-    </div>
-   
-  
+        {messages.map((message, i) => (
+          <div key={i}>
+            <span>{message.sender}: </span>
+            <span>{message.text}</span>
+          </div>
+        ))}
+        <form onSubmit={handleSubmit}>
+          <input value={input} onChange={handleInput} />
+          <button type="submit">Send</button>
+        </form>
+      </div>
+
       <div className="button-group">
         <button className="download-btn" onClick={() => downloadJson(keywords)}>
           Download JSON
