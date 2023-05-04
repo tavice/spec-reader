@@ -5,15 +5,14 @@ import pdfjsLib from "pdfjs-dist";
 //import css
 import "../styles/FileImport.css";
 
-//Import TagCLoud
-import { TagCloud } from "react-tagcloud";
-//import 'react-tagcloud/dist/styles.min.css';
 
-//Import Chart
-import Chart from "chart.js/auto";
+
+
 
 const FileImport = () => {
   const [keywords, setKeywords] = useState([]);
+  const [input, setInput] = useState('');
+  const [messages, setMessages] = useState([]);
 
   //Function to handle file change
   const handleFileChange = (event) => {
@@ -50,7 +49,7 @@ const FileImport = () => {
         const text = pages.join(" ");
         console.log(text);
         const jsonData = { text };
-        const response = await fetch("http://localhost:3001/", {
+        const response = await fetch("http://localhost:3001/PDF", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -63,67 +62,13 @@ const FileImport = () => {
         //check if data is received
         console.log(data);
 
-        //update chart
-        updateChart(data.tagCloudHTML);
-
-        //update keywords
-        // if (data.keywords) {
-        //   setKeywords((prevKeywords) => [
-        //     ...prevKeywords,
-        //     ...data.keywords.map((keyword) => ({ value: keyword })),
-        //   ]);
-        // }
-
-        //update tag cloud
-        saveToLocalStorage(data.tagCloud);
+        //saveToLocalStorage(data);
+        //downloadJson(data);
+        //downloadText(data);
       }
     }
   };
 
-  //function to update the chart
-  function updateChart(tagCloud) {
-    const canvas = document.getElementById("my-canvas");
-    const ctx = canvas.getContext("2d");
-
-    const chartData = {
-      labels: Object.keys(tagCloud),
-      datasets: [
-        {
-          label: "Tag Cloud",
-          backgroundColor: "rgba(63, 191, 255, 0.5)",
-          borderColor: "rgba(63, 191, 255, 1)",
-          borderWidth: 1,
-          data: Object.values(tagCloud),
-        },
-      ],
-    };
-
-    const options = {
-      responsive: true,
-      maintainAspectRatio: false,
-      scales: {
-        yAxes: [
-          {
-            ticks: {
-              beginAtZero: true,
-              stepSize: 0.1,
-            },
-          },
-        ],
-      },
-    };
-
-    new Chart(ctx, {
-      type: "bar",
-      data: chartData,
-      options: options,
-    });
-  }
-
-  //
-  function onCloudDraw(canvas) {
-    console.log("Canvas has been rendered:", canvas);
-  }
 
   //Function to download json as a JSON File
   const downloadJson = (data) => {
@@ -157,41 +102,60 @@ const FileImport = () => {
     console.log(jsonData);
   };
 
-  //update keywords
-  // useEffect(() => {
-  //   // retrieve data from local storage
-  //   const jsonData = JSON.parse(localStorage.getItem("myData"));
 
-  //   // update state with the data from local storage This code checks if jsonData is truthy, and then creates a new array newKeywords by calling Object.values to get an array of the values in jsonData, and then mapping over that array to transform each value into an object with a value key. Finally, it updates the keywords state by spreading the previous state and adding the new array of keywords.
-  //   if (jsonData) {
-  //     const newKeywords = Object.values(jsonData).map((keyword) => ({ value: keyword }));
-  //     setKeywords((prevKeywords) => [...prevKeywords, ...newKeywords]);
-  //   }
-  // }, []);
 
-  console.log("keywords are", keywords);
+
+  //The next function we will build the chat message
+  //
+
+  const handleInput = (e) => {
+    setInput(e.target.value);
+  };
+ 
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    // make POST request to backend API
+    const response = await fetch("http://localhost:3001", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ text: input }),
+    });
+
+    // get response from backend API and add it to messages
+    const data = await response.json();
+    setMessages([...messages, { sender: "user", text: input }]); // add user message
+    setMessages([...messages, { sender: "chatbot", text: data.message }]); // add chatbot message
+
+    // clear input field
+    setInput("");
+  };
+
+  //console.log(messages);
+
+
 
   return (
     <div className="file-import-container">
       <input type="file" className="file-input" onChange={handleFileChange} />
-      <div className="tag-cloud-container">
-        <TagCloud
-          minSize={12}
-          maxSize={35}
-          tags={keywords.map((keyword, index) => ({
-            value: keyword,
-            count: index + 1,
-          }))}
-          className="simple-cloud"
-          onClick={(tag) => console.log(`'${tag.value}' was selected!`)}
-          onTagDraw={(tag, canvas) => {
-            canvas.fillStyle = tag.color;
-            canvas.font = `${tag.size}px sans-serif`;
-          }}
-          onCanvasDraw={onCloudDraw}
-        />
-        <canvas id="my-canvas" />
-      </div>
+      
+      <div>
+      {messages.map((message, i) => (
+        <div key={i}>
+          <span>{message.sender}: </span>
+          <span>{message.text}</span>
+        </div>
+      ))}
+      <form onSubmit={handleSubmit}>
+        <input value={input} onChange={handleInput} />
+        <button type="submit">Send</button>
+      </form>
+    </div>
+   
+  
       <div className="button-group">
         <button className="download-btn" onClick={() => downloadJson(keywords)}>
           Download JSON

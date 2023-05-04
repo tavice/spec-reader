@@ -1,34 +1,29 @@
-//A express server which will handle api request coning in and respond back with a json object it will use body parser as well as ports
-///=========open ai api k ========///
-
-const OpenAI = require("openai");
-
-const { Configuration, OpenAIApi } = OpenAI;
-
-//===========express server =========//
-//==dependencies==//
-
 const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require("cors");
 const app = express();
 const port = 3001;
 require("dotenv").config();
+const OpenAI = require("openai");
+const { Configuration, OpenAIApi } = OpenAI;
+const pdf = require("pdf-parse");
+const fs = require("fs");
+const multer = require("multer");
 
+// Initialize OpenAI
 const ORGANIZATION = process.env.ORGANIZATION;
 const API_KEY = process.env.API_KEY;
-
-//==open ai config==//
 const configuration = new Configuration({
   organization: ORGANIZATION,
   apiKey: API_KEY,
 });
 const openai = new OpenAIApi(configuration);
 
+// Initialize Express
 app.use(bodyParser.json());
 app.use(cors());
 
-//==cors headers==//
+// Define routes
 app.use(function (req, res, next) {
   console.log("Setting Access-Control-Allow-Origin header");
   res.header("Access-Control-Allow-Origin", "*");
@@ -43,17 +38,46 @@ app.use(function (req, res, next) {
   next();
 });
 
-//==routes==//
-//==POST for OPEN AI==//
-app.post("/", async (req, res) => {
+// Set up multer storage and file filter
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "uploads/");
+  },
+  filename: function (req, file, cb) {
+    cb(null, file.originalname);
+  },
+});
+const fileFilter = function (req, file, cb) {
+  if (file.mimetype === "application/pdf") {
+    cb(null, true);
+  } else {
+    cb(new Error("File type not allowed"), false);
+  }
+};
+
+// Set up multer middleware
+const upload = multer({
+  storage: storage,
+  fileFilter: fileFilter,
+});
+
+
+
+// Route for analyzing PDF
+app.post("/pdf", async (req, res) => {
+  
+   
+  
+
   const { text } = req.body;
+
+  // Analyze text with OpenAI
   const response = await openai.createCompletion({
-    model: "text-davinci-003",
+    model: "text-davinci-002",
     prompt:
-      "extract keywords from text: " +
+      "analyze the text from the PDF: " +
       text +
-      "\n\nKeywords:\n" +
-      "your keywords should be weighted by their importance, for example: \n- keyword1 (0.5)\n- keyword2 (0.3)\n- keyword3 (0.2)\n etc... then you will return a json object with the keywords and their weights.",
+      " this will be used to analyze the text and give a response back to the user in a chatbot in the frontend",
     max_tokens: 200,
     temperature: 0,
     top_p: 1.0,
@@ -61,42 +85,49 @@ app.post("/", async (req, res) => {
     presence_penalty: 0.0,
   });
 
-  //==generate tag cloud get the keywords in a an object format==//
-  function generateTagCloud(response) {
-    let tagCloud = {};
-    if (response.data && response.data.choices) {
-      // check if response is valid
-      const keywords = response.data.choices[0].text
-        .split("\n")
-        .filter(Boolean); // remove empty strings
-      for (const keyword of keywords) {
-        const [word, weight] = keyword.split("(").map((s) => s.trim()); // split word and weight
-        tagCloud[word] = parseFloat(weight.slice(0, -1)); // remove closing bracket
-      }
+  // Send response back to frontend
+  console.log(response.data);
+  if (response.data) {
+    if (response.data.choices) {
+      res.json({
+        message: response.data.choices[0].text,
+      });
     }
-    console.log(tagCloud);
-    return tagCloud;
   }
 
-  console.log(response.data);
-  const tagCloud = generateTagCloud(response);
-
-  // generate HTML with the tag cloud
-  const tagCloudHTML = Object.entries(tagCloud)
-    .map(
-      ([word, weight]) =>
-        `<span style="font-size: ${12 + weight * 10}px">${word}</span>`
-    )
-    .join(" ");
-
-  // respond with JSON including tag cloud and HTML
-  res.json({
-    tagCloud,
-    tagCloudHTML,
-  });
+  
 });
 
-//==PORT==//
+// Route for chatbot
+app.post("/", async (req, res) => {
+  const { text } = req.body;
+  const response = await openai.createCompletion({
+    model: "text-davinci-003",
+    prompt:
+      "The following is a conversation with a chatbot. The bot is helpful, creative, clever, and very friendly. User: " +
+      text +
+      "Bot: The text is: " +
+      text +
+      " this will be used to analyze the text and give a response back to the user in a chatbot in the frontend",
+    max_tokens: 200,
+    temperature: 0,
+    top_p: 1.0,
+    frequency_penalty: 0.8,
+    presence_penalty: 0.0,
+  });
+
+  // Send response back to frontend
+  console.log(response.data);
+  if (response.data) {
+    if (response.data.choices) {
+      res.json({
+        message: response.data.choices[0].text,
+      });
+    }
+  }
+});
+
+// Start server
 app.listen(port, () => {
   console.log("app listening on port", port);
 });
