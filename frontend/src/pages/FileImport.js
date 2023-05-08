@@ -49,7 +49,7 @@ const FileImport = () => {
       if (pages.length === pdf.numPages) {
         const text = pages.join(" ");
 
-        console.log(text);
+        //console.log(text);
         //Keep original text in memory
 
         setOriginalText(text);
@@ -60,13 +60,13 @@ const FileImport = () => {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ text }),
+          body: JSON.stringify({ text, referenceText: originalText }),
         });
 
         const data = await response.json();
 
         //check if data is received
-        console.log(data);
+        //console.log(data);
 
         //initiate the chatbox
 
@@ -79,6 +79,8 @@ const FileImport = () => {
       }
     }
   };
+  //check if we have saved the original text
+  console.log('original text:', originalText);
 
   //Function to download json as a JSON File
   const downloadJson = (data) => {
@@ -145,7 +147,9 @@ const FileImport = () => {
   return (
     <div className="file-import-container">
       <input type="file" className="file-input" onChange={handleFileChange} />
-
+      <div className = 'display-text'>
+        <p>{originalText}</p>
+      </div>
       <div>
         {messages.map((message, i) => (
           <div key={i}>

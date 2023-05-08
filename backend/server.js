@@ -107,19 +107,13 @@ app.post("/", async (req, res) => {
 
   const response = await openai.createCompletion({
     model: "text-davinci-003",
-    prompt:
-      "The following is a conversation with a chatbot. The bot is helpful, creative, clever, and very friendly. The first prompt will be from a text uploaded the model will analyze the next so that in the rest of the conversation it refers to the text in the originalText " +
-      "first prompt (text uploaded from a pdf): " +
-      originalText +
-      "Bot: The text from the uploaded pdf is: " +
-      originalText +
-      " this will be used to analyze the text and give a response back to the user in a chatbot in the frontend " +
-      "User: " + text + "Bot:  I understand your question is related to the text uploaded in the first prompt and this is my answer: " ,
-    max_tokens: 200,
-    temperature: 0,
-    top_p: 1.0,
-    frequency_penalty: 0.8,
-    presence_penalty: 0.0,
+    prompt: "The following is a conversation with an AI assistant. The assistant is helpful, creative, clever, and very friendly.\n\nHuman: Hello, who are you?\nAI: I am an AI created by OpenAI. How can I help you today?\nHuman: I'd like you to analize the uploaded text which is " + {originalText} + ".\nAI:",
+    temperature: 0.9,
+    max_tokens: 150,
+    top_p: 1,
+    frequency_penalty: 0.0,
+    presence_penalty: 0.6,
+    stop: [" Human:", " AI:"],
   });
 
   // Send response back to frontend
